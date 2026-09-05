@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UserProfile } from '../types';
-import { MessageSquare, ArrowRight, ArrowLeft, X, Sparkles, Heart, Globe, Award, Shield } from 'lucide-react';
+import { MessageSquare, ArrowRight, ArrowLeft, X, Sparkles, Heart, Shield } from 'lucide-react';
 import { safeLanguage } from '../data/languages';
 
 interface MatchingModalProps {
@@ -23,14 +23,14 @@ export const MatchingModal: React.FC<MatchingModalProps> = ({
     return (
       <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
         <div className="bg-white rounded-3xl max-w-sm w-full p-8 text-center space-y-4 shadow-2xl border border-slate-100">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto">
+          <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center mx-auto">
             <Sparkles className="w-6 h-6" />
           </div>
           <h3 className="text-xl font-black text-slate-900 tracking-tight">No Partners Available</h3>
           <p className="text-sm text-slate-500 leading-relaxed">Check back soon when more language partners join the exchange pool.</p>
           <button
             onClick={onClose}
-            className="w-full py-3.5 rounded-2xl bg-slate-900 text-white font-bold text-sm hover:bg-slate-800 transition-all shadow-lg cursor-pointer"
+            className="w-full py-3.5 rounded-2xl bg-red-600 text-white font-bold text-sm hover:bg-red-700 transition-all shadow-lg shadow-red-600/25 cursor-pointer"
           >
             Close Window
           </button>
@@ -59,12 +59,12 @@ export const MatchingModal: React.FC<MatchingModalProps> = ({
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
       <div className="bg-white rounded-[32px] max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 relative space-y-6 overflow-hidden">
         {/* Top Decorative Gradient Banner */}
-        <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 opacity-10 pointer-events-none"></div>
+        <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-r from-red-600 via-rose-600 to-orange-600 opacity-10 pointer-events-none"></div>
 
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 hover:text-slate-900 transition-all cursor-pointer shadow-xs z-10"
+          className="absolute top-6 right-6 w-10 h-10 rounded-full bg-slate-100 hover:bg-red-50 flex items-center justify-center text-slate-700 hover:text-red-600 transition-all cursor-pointer shadow-xs z-10"
           title="Close"
         >
           <X className="w-5 h-5" />
@@ -72,12 +72,12 @@ export const MatchingModal: React.FC<MatchingModalProps> = ({
 
         {/* Header Title */}
         <div className="flex items-center gap-3 relative z-10">
-          <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/25">
+          <div className="w-10 h-10 rounded-2xl bg-red-600 text-white flex items-center justify-center shadow-md shadow-red-600/25">
             <Sparkles className="w-5 h-5" />
           </div>
           <div>
             <h3 className="text-lg font-black text-slate-900 tracking-tight">نظام المطابقة الذكية</h3>
-            <p className="text-xs font-semibold text-indigo-600">
+            <p className="text-xs font-semibold text-red-600">
               Partner {currentIndex + 1} of {availablePartners.length} • Verified Exchange
             </p>
           </div>
@@ -118,9 +118,9 @@ export const MatchingModal: React.FC<MatchingModalProps> = ({
               </div>
             </div>
 
-            <div className="bg-indigo-50/60 p-3.5 rounded-2xl border border-indigo-100 space-y-1">
-              <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider block">يريد ممارسة (Target)</span>
-              <div className="flex items-center gap-2 font-bold text-indigo-950 text-sm">
+            <div className="bg-red-50/60 p-3.5 rounded-2xl border border-red-100 space-y-1">
+              <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider block">يريد ممارسة (Target)</span>
+              <div className="flex items-center gap-2 font-bold text-red-950 text-sm">
                 <span className="text-base">{partner.targetLanguage.flag}</span>
                 <span>{partner.targetLanguage.name}</span>
               </div>
@@ -147,7 +147,7 @@ export const MatchingModal: React.FC<MatchingModalProps> = ({
 
           {/* Bio / About */}
           {partner.bio && (
-            <div className="bg-amber-50/50 p-3.5 rounded-2xl border border-amber-200/60 text-xs text-slate-700 italic leading-relaxed">
+            <div className="bg-red-50/50 p-3.5 rounded-2xl border border-red-200/60 text-xs text-slate-700 italic leading-relaxed">
               "{partner.bio}"
             </div>
           )}
@@ -159,7 +159,7 @@ export const MatchingModal: React.FC<MatchingModalProps> = ({
             {/* Previous / الرجوع إليه */}
             <button
               onClick={handlePrev}
-              className="py-3.5 px-4 rounded-2xl border border-slate-200 hover:border-slate-900 bg-white text-slate-700 hover:text-slate-900 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
+              className="py-3.5 px-4 rounded-2xl border border-slate-200 hover:border-red-600 bg-white text-slate-700 hover:text-red-600 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>الرجوع إليه (Prev)</span>
@@ -168,7 +168,7 @@ export const MatchingModal: React.FC<MatchingModalProps> = ({
             {/* Skip / تخطي */}
             <button
               onClick={handleNext}
-              className="py-3.5 px-4 rounded-2xl border border-slate-200 hover:border-slate-900 bg-white text-slate-700 hover:text-slate-900 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
+              className="py-3.5 px-4 rounded-2xl border border-slate-200 hover:border-red-600 bg-white text-slate-700 hover:text-red-600 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
             >
               <span>تخطي (Skip)</span>
               <ArrowRight className="w-4 h-4" />
@@ -181,7 +181,7 @@ export const MatchingModal: React.FC<MatchingModalProps> = ({
               onStartChat(partner);
               onClose();
             }}
-            className="w-full py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-black text-sm shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2.5 transition-all cursor-pointer"
+            className="w-full py-4 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-black text-sm shadow-lg shadow-red-600/25 flex items-center justify-center gap-2.5 transition-all cursor-pointer"
           >
             <MessageSquare className="w-4 h-4" />
             <span>بدء الدردشة الفورية مع {partner.name} (Start Chat)</span>

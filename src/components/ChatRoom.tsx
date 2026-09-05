@@ -13,10 +13,10 @@ import {
   ArrowLeft,
   RotateCcw,
   ShieldCheck,
-  Smile,
-  Heart,
-  MessageCircle,
-  HelpCircle
+  Mic,
+  Square,
+  Play,
+  Pause
 } from 'lucide-react';
 
 interface ChatRoomProps {
@@ -51,6 +51,13 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
   const [showTopics, setShowTopics] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(300); // 5 minutes timer
   const [exchangePhase, setExchangePhase] = useState<'target' | 'native'>('target');
+
+  // Voice recording states
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioBlobUrl, setAudioBlobUrl] = useState<string | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Initialize intro messages
@@ -101,6 +108,62 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
     const mins = Math.floor(secs / 60);
     const s = secs % 60;
     return `${mins}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  // Start Voice Recording
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        setAudioBlobUrl(audioUrl);
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error('Error accessing microphone:', err);
+      alert('Could not access microphone. Please check permissions.');
+    }
+  };
+
+  // Stop Voice Recording
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
+      setIsRecording(false);
+    }
+  };
+
+  // Send Voice Note
+  const handleSendVoiceNote = () => {
+    if (!audioBlobUrl) return;
+
+    const voiceMsg: ChatMessage = {
+      id: `voice_msg_${Date.now()}`,
+      senderId: currentUser.id,
+      senderName: currentUser.name,
+      senderAvatar: currentUser.avatar,
+      text: '🎤 [Voice Note / رسالة صوتية]',
+      audioUrl: audioBlobUrl,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      isNative: false,
+    };
+
+    setMessages((prev) => [...prev, voiceMsg]);
+    setAudioBlobUrl(null);
   };
 
   const handleSendMessage = async (textToSend?: string) => {
@@ -218,11 +281,11 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
   return (
     <div className="w-full max-w-5xl mx-auto h-[calc(100vh-80px)] flex flex-col bg-slate-50 border-x border-slate-200 shadow-xl rounded-t-3xl overflow-hidden my-auto">
       {/* Top Navbar Header */}
-      <div className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shrink-0 z-10 shadow-xs">
+      <div className="bg-white border-b border-red-100 px-6 py-4 flex items-center justify-between shrink-0 z-10 shadow-xs">
         <div className="flex items-center gap-4">
           <button
             onClick={onEndChat}
-            className="p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
+            className="p-2 rounded-xl text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
             title="Back to Dashboard"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -245,7 +308,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
             <p className="text-xs text-slate-500 flex items-center gap-2 font-medium">
               <span>Native: {partner.nativeLanguage.flag} {partner.nativeLanguage.name}</span>
               <span>•</span>
-              <span className="text-indigo-600 font-bold">Practicing: {partner.targetLanguage.flag} {partner.targetLanguage.name}</span>
+              <span className="text-red-600 font-bold">Practicing: {partner.targetLanguage.flag} {partner.targetLanguage.name}</span>
             </p>
           </div>
         </div>
@@ -254,14 +317,14 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
         <div className="flex items-center gap-3">
           <button
             onClick={onNextMatch}
-            className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-sm cursor-pointer transition-all"
+            className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-md shadow-red-600/20 cursor-pointer transition-all"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Next Partner</span>
           </button>
           <button
             onClick={onEndChat}
-            className="px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold cursor-pointer transition-all"
+            className="px-4 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold cursor-pointer transition-all"
           >
             End Chat
           </button>
@@ -269,9 +332,9 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
       </div>
 
       {/* Reciprocal Time Balance Bar */}
-      <div className="bg-slate-900 text-slate-200 px-6 py-2.5 flex items-center justify-between text-xs shrink-0 shadow-inner">
+      <div className="bg-red-600 text-white px-6 py-2.5 flex items-center justify-between text-xs shrink-0 shadow-inner">
         <div className="flex items-center gap-2.5">
-          <Clock className="w-4 h-4 text-amber-400" />
+          <Clock className="w-4 h-4 text-red-200" />
           <span>
             Exchange Focus:{' '}
             <strong className="text-white">
@@ -281,7 +344,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
             </strong>
           </span>
         </div>
-        <div className="flex items-center gap-2 bg-slate-800 px-3 py-1 rounded-lg text-amber-300 font-mono font-black text-sm shadow-2xs">
+        <div className="flex items-center gap-2 bg-red-700 px-3 py-1 rounded-lg text-white font-mono font-black text-sm shadow-2xs border border-red-500">
           <span>{formatTime(timerSeconds)}</span>
         </div>
       </div>
@@ -309,11 +372,18 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
                 <div
                   className={`p-4 rounded-2xl text-sm leading-relaxed shadow-sm relative group ${
                     isMe
-                      ? 'bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-tr-xs'
+                      ? 'bg-red-600 text-white rounded-tr-xs shadow-md shadow-red-600/15'
                       : 'bg-white border border-slate-200/80 text-slate-900 rounded-tl-xs'
                   }`}
                 >
                   <p className="whitespace-pre-wrap">{msg.text}</p>
+
+                  {/* Audio / Voice Note Player */}
+                  {msg.audioUrl && (
+                    <div className="mt-3 pt-2">
+                      <audio controls src={msg.audioUrl} className="w-full h-10 rounded-xl" />
+                    </div>
+                  )}
 
                   {/* Correction Badge */}
                   {msg.correction && (
@@ -332,8 +402,8 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
 
                   {/* Inline Translation */}
                   {msg.translatedText && (
-                    <div className="mt-3 pt-3 border-t border-indigo-200/55 text-xs text-indigo-950 bg-indigo-50/80 p-3 rounded-xl space-y-0.5">
-                      <span className="font-bold text-indigo-700 block uppercase text-[10px]">Translation</span>
+                    <div className="mt-3 pt-3 border-t border-red-200/55 text-xs text-red-950 bg-red-50/80 p-3 rounded-xl space-y-0.5">
+                      <span className="font-bold text-red-700 block uppercase text-[10px]">Translation</span>
                       <p className="font-medium">{msg.translatedText}</p>
                     </div>
                   )}
@@ -341,12 +411,12 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
                   {/* Toolbar */}
                   <div
                     className={`mt-3 flex items-center gap-4 text-xs pt-2 border-t ${
-                      isMe ? 'border-slate-800 text-slate-300' : 'border-slate-100 text-slate-500'
+                      isMe ? 'border-red-500 text-red-100' : 'border-slate-100 text-slate-500'
                     }`}
                   >
                     <button
                       onClick={() => handleSpeakText(msg.text, isMe ? currentUser.targetLanguage.code : partner.nativeLanguage.code)}
-                      className="hover:text-indigo-400 flex items-center gap-1.5 cursor-pointer font-medium"
+                      className="hover:text-white flex items-center gap-1.5 cursor-pointer font-medium"
                       title="Listen"
                     >
                       <Volume2 className="w-3.5 h-3.5" />
@@ -355,7 +425,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
 
                     <button
                       onClick={() => handleTranslateMessage(msg.id, msg.text)}
-                      className="hover:text-indigo-400 flex items-center gap-1.5 cursor-pointer font-medium"
+                      className="hover:text-white flex items-center gap-1.5 cursor-pointer font-medium"
                       title="Translate"
                     >
                       <Globe className="w-3.5 h-3.5" />
@@ -400,15 +470,15 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
 
       {/* Cultural Conversation Topics Drawer */}
       {showTopics && (
-        <div className="bg-indigo-50 border-t border-indigo-200/80 p-5 space-y-3 animate-in slide-in-from-bottom duration-200 shadow-md">
+        <div className="bg-red-50 border-t border-red-200/80 p-5 space-y-3 animate-in slide-in-from-bottom duration-200 shadow-md">
           <div className="flex items-center justify-between">
-            <h4 className="text-xs font-black uppercase tracking-wider text-indigo-950 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-indigo-600" />
+            <h4 className="text-xs font-black uppercase tracking-wider text-red-950 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-red-600" />
               <span>Culture & Conversation Starters (مواضيع المحادثة)</span>
             </h4>
             <button
               onClick={() => setShowTopics(false)}
-              className="text-xs font-bold text-indigo-600 hover:underline cursor-pointer"
+              className="text-xs font-bold text-red-600 hover:underline cursor-pointer"
             >
               Close
             </button>
@@ -421,9 +491,9 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
                   handleSendMessage(topic.prompt);
                   setShowTopics(false);
                 }}
-                className="text-left p-3 rounded-2xl bg-white border border-indigo-100 hover:border-indigo-300 text-xs text-slate-900 shadow-2xs hover:shadow-md transition-all cursor-pointer space-y-1"
+                className="text-left p-3 rounded-2xl bg-white border border-red-100 hover:border-red-300 text-xs text-slate-900 shadow-2xs hover:shadow-md transition-all cursor-pointer space-y-1"
               >
-                <span className="font-extrabold text-indigo-700 block">{topic.category}</span>
+                <span className="font-extrabold text-red-700 block">{topic.category}</span>
                 <span className="text-slate-600 leading-relaxed block">{topic.prompt}</span>
               </button>
             ))}
@@ -431,14 +501,14 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
         </div>
       )}
 
-      {/* Input Footer */}
+      {/* Input Footer with Voice Recording */}
       <div className="bg-white border-t border-slate-200 p-4 shrink-0 space-y-3 shadow-lg">
         <div className="flex items-center justify-between text-xs text-slate-500">
           <button
             onClick={() => setShowTopics(!showTopics)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold cursor-pointer transition-all shadow-2xs"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-50 text-red-700 hover:bg-red-100 font-bold cursor-pointer transition-all shadow-2xs border border-red-200"
           >
-            <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+            <Sparkles className="w-3.5 h-3.5 text-red-600" />
             <span>Culture Topics & Icebreakers</span>
           </button>
 
@@ -448,6 +518,31 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
           </span>
         </div>
 
+        {/* Audio Recording Preview Bar */}
+        {audioBlobUrl && (
+          <div className="flex items-center justify-between bg-red-50 p-3 rounded-2xl border border-red-200">
+            <div className="flex items-center gap-3">
+              <span className="w-3 h-3 rounded-full bg-red-600 animate-pulse"></span>
+              <span className="text-xs font-bold text-red-900">Voice Note Recorded (رسالة صوتية جاهزة للإرسال)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <audio controls src={audioBlobUrl} className="h-8 max-w-xs" />
+              <button
+                onClick={handleSendVoiceNote}
+                className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-sm cursor-pointer"
+              >
+                Send Voice
+              </button>
+              <button
+                onClick={() => setAudioBlobUrl(null)}
+                className="text-xs font-bold text-slate-500 hover:text-red-600 cursor-pointer px-2"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -455,18 +550,41 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
           }}
           className="flex items-center gap-3"
         >
+          {/* Voice Record Button */}
+          {!isRecording ? (
+            <button
+              type="button"
+              onClick={startRecording}
+              className="p-3 rounded-2xl bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 cursor-pointer transition-all shadow-2xs"
+              title="Record Voice Note"
+            >
+              <Mic className="w-5 h-5" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={stopRecording}
+              className="p-3 rounded-2xl bg-red-600 text-white animate-pulse cursor-pointer transition-all shadow-md flex items-center gap-1.5 text-xs font-bold"
+              title="Stop Recording"
+            >
+              <Square className="w-4 h-4 fill-white" />
+              <span>Stop</span>
+            </button>
+          )}
+
           <input
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            placeholder={`Message ${partner.name} in ${currentUser.targetLanguage.name}...`}
-            className="flex-1 bg-slate-100/80 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600 text-slate-900 rounded-2xl px-5 py-3 text-sm shadow-inner font-medium transition-all"
+            placeholder={isRecording ? 'Recording voice note...' : `Message ${partner.name} in ${currentUser.targetLanguage.name}...`}
+            disabled={isRecording}
+            className="flex-1 bg-slate-100/80 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-600 text-slate-900 rounded-2xl px-5 py-3 text-sm shadow-inner font-medium transition-all"
           />
 
           <button
             type="submit"
-            disabled={!inputText.trim()}
-            className="px-6 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer shrink-0 shadow-md flex items-center gap-2 text-xs"
+            disabled={!inputText.trim() || isRecording}
+            className="px-6 py-3 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-bold disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer shrink-0 shadow-md shadow-red-600/25 flex items-center gap-2 text-xs"
           >
             <span>Send</span>
             <Send className="w-4 h-4" />

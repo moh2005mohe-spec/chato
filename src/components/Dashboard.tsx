@@ -46,11 +46,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
     return matchesLang && matchesSearch;
   });
 
-
   return (
     <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
       {/* Welcome Header */}
-      <div className="bg-black text-white rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
+      <div className="bg-red-600 text-white rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl shadow-red-600/20">
         <div className="flex items-center gap-5 text-left w-full md:w-auto">
           <img
             src={currentUser.avatar}
@@ -62,19 +61,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <h1 className="text-2xl font-black">{currentUser.name}</h1>
               <span className="text-xs bg-white/20 px-2.5 py-0.5 rounded-full font-bold">Online 🟢</span>
             </div>
-            <p className="text-xs text-neutral-300">
+            <p className="text-xs text-red-100">
               Native: <strong className="text-white">{currentUser.nativeLanguage.flag} {currentUser.nativeLanguage.name}</strong> • Practicing: <strong className="text-white">{currentUser.targetLanguage.flag} {currentUser.targetLanguage.name}</strong>
             </p>
-            <p className="text-xs text-neutral-400">{currentUser.location}</p>
+            <p className="text-xs text-red-200">{currentUser.location}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-3 w-full md:w-auto justify-end flex-wrap">
           <button
             onClick={() => setShowMatchingModal(true)}
-            className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-colors cursor-pointer shadow-sm flex items-center gap-1.5"
+            className="px-4 py-2.5 rounded-xl bg-white text-red-600 hover:bg-red-50 text-xs font-bold transition-colors cursor-pointer shadow-sm flex items-center gap-1.5"
           >
-            <Sparkles className="w-4 h-4 text-indigo-200" />
+            <Sparkles className="w-4 h-4 text-red-600" />
             <span>نظام المطابقة السريعة (Smart Match)</span>
           </button>
           <button
@@ -89,26 +88,26 @@ export const Dashboard: React.FC<DashboardProps> = ({
       {/* Filter & Search */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="relative w-full sm:w-80">
-          <Search className="absolute left-3.5 top-3 w-4 h-4 text-neutral-400" />
+          <Search className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by name, country, interests..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-neutral-300 text-xs font-medium focus:outline-none focus:border-black bg-white"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-red-600 bg-white"
           />
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0">
-          <span className="text-xs font-bold text-neutral-500 shrink-0">Filter Lang:</span>
+          <span className="text-xs font-bold text-slate-500 shrink-0">Filter Lang:</span>
           {['all', 'en', 'fr', 'ar', 'es', 'de'].map((code) => (
             <button
               key={code}
               onClick={() => setFilterLang(code)}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-colors cursor-pointer shrink-0 ${
                 filterLang === code
-                  ? 'bg-black text-white'
-                  : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
+                  ? 'bg-red-600 text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
               }`}
             >
               {code === 'all' ? 'All' : code}
@@ -120,13 +119,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
       {/* Matching Grid */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-black text-black flex items-center gap-2">
-            <Users className="w-5 h-5" />
+          <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
+            <Users className="w-5 h-5 text-red-600" />
             <span>Matching Language Partners ({filteredPartners.length})</span>
           </h2>
           <button
             onClick={() => setShowMatchingModal(true)}
-            className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
+            className="text-xs font-bold text-red-600 hover:text-red-700 flex items-center gap-1 cursor-pointer"
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span>فتح نافذة المطابقة (Open Match Popup)</span>
@@ -137,7 +136,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           {filteredPartners.map((partner) => (
             <div
               key={partner.id}
-              className="bg-white rounded-3xl border border-neutral-200 p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-5"
+              className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-5"
             >
               <div className="space-y-4">
                 <div className="flex items-start justify-between">
@@ -146,36 +145,36 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       <img
                         src={partner.avatar}
                         alt={partner.name}
-                        className="w-14 h-14 rounded-full object-cover border border-neutral-200"
+                        className="w-14 h-14 rounded-full object-cover border border-slate-200"
                       />
                       <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full"></span>
                     </div>
                     <div>
-                      <h3 className="text-base font-bold text-black flex items-center gap-1.5">
+                      <h3 className="text-base font-bold text-slate-900 flex items-center gap-1.5">
                         <span>{partner.name}</span>
                         <span>{partner.flag}</span>
                       </h3>
-                      <p className="text-xs text-neutral-500">{partner.location}</p>
+                      <p className="text-xs text-slate-500">{partner.location}</p>
                     </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="bg-neutral-50 p-2.5 rounded-xl border border-neutral-200">
-                    <span className="text-[10px] text-neutral-400 block font-bold uppercase">Native</span>
-                    <span className="font-bold text-black flex items-center gap-1 mt-0.5">
+                  <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                    <span className="text-[10px] text-slate-400 block font-bold uppercase">Native</span>
+                    <span className="font-bold text-slate-900 flex items-center gap-1 mt-0.5">
                       {partner.nativeLanguage.flag} {partner.nativeLanguage.name}
                     </span>
                   </div>
-                  <div className="bg-neutral-50 p-2.5 rounded-xl border border-neutral-200">
-                    <span className="text-[10px] text-neutral-400 block font-bold uppercase">Practicing</span>
-                    <span className="font-bold text-black flex items-center gap-1 mt-0.5">
+                  <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                    <span className="text-[10px] text-slate-400 block font-bold uppercase">Practicing</span>
+                    <span className="font-bold text-slate-900 flex items-center gap-1 mt-0.5">
                       {partner.targetLanguage.flag} {partner.targetLanguage.name}
                     </span>
                   </div>
                 </div>
 
-                <p className="text-xs text-neutral-600 line-clamp-2 leading-relaxed italic">
+                <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed italic">
                   "{partner.bio}"
                 </p>
 
@@ -183,7 +182,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   {partner.interests.map((interest, idx) => (
                     <span
                       key={idx}
-                      className="px-2.5 py-0.5 rounded-md bg-neutral-100 text-neutral-700 text-[11px] font-medium"
+                      className="px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-medium"
                     >
                       {interest}
                     </span>
@@ -193,7 +192,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
               <button
                 onClick={() => onStartChat(partner)}
-                className="w-full py-3 rounded-2xl bg-black hover:bg-neutral-800 text-white font-bold text-xs shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
+                className="w-full py-3 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-md shadow-red-600/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
                 <MessageSquare className="w-4 h-4" />
                 <span>Start Chat & Exchange</span>

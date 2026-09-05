@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { MessageSquare, Users, Globe2, BookOpen, Info } from 'lucide-react';
+import React from 'react';
+import { MessageSquare, BookOpen } from 'lucide-react';
 import { AuthHeaderControls } from './ClerkAuthWrapper';
 
 interface NavbarProps {
@@ -11,41 +11,29 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ userName, userAvatar, onUserSet, onOpenRules }) => {
   return (
-    <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 lg:px-8 py-3">
+    <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-red-100 px-4 lg:px-8 py-3">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-slate-900 via-indigo-950 to-slate-800 flex items-center justify-center text-white shadow-xs">
-            <MessageSquare className="w-5 h-5 text-indigo-400" />
+          <div className="w-9 h-9 rounded-xl bg-red-600 flex items-center justify-center text-white shadow-md shadow-red-600/20">
+            <MessageSquare className="w-5 h-5 text-white" />
           </div>
           <div>
-            <span className="text-lg font-bold tracking-tight text-slate-900">Chato</span>
-            <span className="hidden sm:inline-block ml-2 text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+            <span className="text-lg font-black tracking-tight text-slate-900">Chato</span>
+            <span className="hidden sm:inline-block ml-2 text-xs font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200">
               Language Exchange
             </span>
           </div>
-        </div>
-
-        {/* Live Online Counter */}
-        <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-800 text-xs font-medium">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-          </span>
-          <Users className="w-3.5 h-3.5 text-emerald-600" />
-          <span>1,482 members online</span>
-          <span className="text-emerald-400">•</span>
-          <span className="text-emerald-700 font-normal">Algiers 🇩🇿, London 🇬🇧, Paris 🇫🇷</span>
         </div>
 
         {/* Actions & Auth */}
         <div className="flex items-center gap-3">
           <button
             onClick={onOpenRules}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-700 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer border border-slate-200"
             title="Language Exchange Rules"
           >
-            <BookOpen className="w-3.5 h-3.5" />
+            <BookOpen className="w-3.5 h-3.5 text-red-600" />
             <span className="hidden sm:inline">Exchange Rules</span>
           </button>
 
