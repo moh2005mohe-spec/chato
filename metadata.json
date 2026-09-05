@@ -1,0 +1,6 @@
+{
+  "name": "Chato - Language Exchange Platform",
+  "description": "Connect with native language exchange partners around the world for real-time text chat, language correction, and cultural exchange.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
