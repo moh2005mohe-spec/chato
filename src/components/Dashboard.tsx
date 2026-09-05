@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { UserProfile } from '../types';
 import { MOCK_PARTNERS } from '../data/mockPartners';
-import { Users, MessageSquare, Search } from 'lucide-react';
+import { Users, MessageSquare, Search, Sparkles } from 'lucide-react';
+import { MatchingModal } from './MatchingModal';
 
 interface DashboardProps {
   currentUser: UserProfile;
@@ -16,6 +17,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 }) => {
   const [filterLang, setFilterLang] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [showMatchingModal, setShowMatchingModal] = useState<boolean>(false);
 
   const filteredPartners = MOCK_PARTNERS.filter((partner) => {
     if (partner.id === currentUser.id) return false;
@@ -55,7 +57,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+        <div className="flex items-center gap-3 w-full md:w-auto justify-end flex-wrap">
+          <button
+            onClick={() => setShowMatchingModal(true)}
+            className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-colors cursor-pointer shadow-sm flex items-center gap-1.5"
+          >
+            <Sparkles className="w-4 h-4 text-indigo-200" />
+            <span>نظام المطابقة السريعة (Smart Match)</span>
+          </button>
           <button
             onClick={onEditProfile}
             className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-colors cursor-pointer border border-white/20"
@@ -103,7 +112,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <Users className="w-5 h-5" />
             <span>Matching Language Partners ({filteredPartners.length})</span>
           </h2>
-          <span className="text-xs text-neutral-500">Matched with your interests & languages</span>
+          <button
+            onClick={() => setShowMatchingModal(true)}
+            className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>فتح نافذة المطابقة (Open Match Popup)</span>
+          </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -175,6 +190,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
           ))}
         </div>
       </div>
+
+      {/* Matching Modal Popup */}
+      {showMatchingModal && (
+        <MatchingModal
+          currentUser={currentUser}
+          partners={MOCK_PARTNERS}
+          onStartChat={onStartChat}
+          onClose={() => setShowMatchingModal(false)}
+        />
+      )}
     </div>
   );
 };
