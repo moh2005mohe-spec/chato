@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, X, CheckCircle2, Heart, Shield, Sparkles } from 'lucide-react';
+import { BookOpen, X, CheckCircle2 } from 'lucide-react';
 
 interface RulesModalProps {
   onClose: () => void;
@@ -11,8 +11,8 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
       <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-6">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center">
-              <BookOpen className="w-5 h-5 text-indigo-400" />
+            <div className="w-9 h-9 rounded-xl bg-red-600 text-white flex items-center justify-center shadow-md shadow-red-600/20">
+              <BookOpen className="w-5 h-5 text-white" />
             </div>
             <div>
               <h3 className="text-base font-extrabold text-slate-900">Exchange Guidelines</h3>
@@ -28,11 +28,11 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
         </div>
 
         <div className="space-y-4 text-xs text-slate-700 leading-relaxed">
-          <div className="flex items-start gap-3 p-3 bg-indigo-50/60 rounded-xl border border-indigo-100">
-            <CheckCircle2 className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
+          <div className="flex items-start gap-3 p-3 bg-red-50/60 rounded-xl border border-red-100">
+            <CheckCircle2 className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-bold text-indigo-950 text-sm">1. Equal 50/50 Time Rule</h4>
-              <p className="text-indigo-900 mt-0.5">
+              <h4 className="font-bold text-red-950 text-sm">1. Equal 50/50 Time Rule</h4>
+              <p className="text-red-900 mt-0.5">
                 Spend roughly half your conversation in your target language and half in your native language so both partners get equal practice value.
               </p>
             </div>
@@ -57,23 +57,13 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
               </p>
             </div>
           </div>
-
-          <div className="flex items-start gap-3 p-3 bg-slate-100/80 rounded-xl border border-slate-200">
-            <Shield className="w-5 h-5 text-slate-600 shrink-0 mt-0.5" />
-            <div>
-              <h4 className="font-bold text-slate-900 text-sm">4. Respectful Community</h4>
-              <p className="text-slate-600 mt-0.5">
-                Chato is an educational exchange space. Keep interactions friendly, respectful, and focused on language learning.
-              </p>
-            </div>
-          </div>
         </div>
 
         <button
           onClick={onClose}
-          className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md cursor-pointer transition-colors"
+          className="w-full py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-md shadow-red-600/20 cursor-pointer transition-all"
         >
-          Got it, let's exchange!
+          Got it (فهمت)
         </button>
       </div>
     </div>
