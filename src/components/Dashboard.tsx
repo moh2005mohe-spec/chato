@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { UserProfile } from '../types';
 import { MOCK_PARTNERS } from '../data/mockPartners';
+import { safeLanguage } from '../data/languages';
 import { Users, MessageSquare, Search, Sparkles } from 'lucide-react';
 import { MatchingModal } from './MatchingModal';
 
@@ -11,15 +12,25 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({
-  currentUser,
+  currentUser: rawUser,
   onStartChat,
   onEditProfile,
 }) => {
+  const currentUser: UserProfile = {
+    ...rawUser,
+    nativeLanguage: safeLanguage(rawUser.nativeLanguage),
+    targetLanguage: safeLanguage(rawUser.targetLanguage),
+  };
+
   const [filterLang, setFilterLang] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [showMatchingModal, setShowMatchingModal] = useState<boolean>(false);
 
-  const filteredPartners = MOCK_PARTNERS.filter((partner) => {
+  const filteredPartners = MOCK_PARTNERS.map((p) => ({
+    ...p,
+    nativeLanguage: safeLanguage(p.nativeLanguage),
+    targetLanguage: safeLanguage(p.targetLanguage),
+  })).filter((partner) => {
     if (partner.id === currentUser.id) return false;
     const matchesLang =
       filterLang === 'all' ||
@@ -34,6 +45,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
     return matchesLang && matchesSearch;
   });
+
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">

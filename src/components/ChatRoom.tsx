@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { UserProfile, ChatMessage, Language, LanguageCorrection } from '../types';
+import { UserProfile, ChatMessage, LanguageCorrection } from '../types';
 import { CorrectionModal } from './CorrectionModal';
 import { CULTURAL_TOPICS } from '../data/mockPartners';
+import { safeLanguage } from '../data/languages';
 import {
   Send,
   Volume2,
@@ -10,47 +11,49 @@ import {
   Sparkles,
   Clock,
   ArrowLeft,
-  Smile,
-  Mic,
-  MicOff,
-  MoreVertical,
-  CheckCheck,
   RotateCcw,
-  BookOpen,
-  Info,
-  ShieldCheck
+  ShieldCheck,
+  Smile,
+  Heart,
+  MessageCircle,
+  HelpCircle
 } from 'lucide-react';
 
 interface ChatRoomProps {
   partner: UserProfile;
-  userNativeLang: Language;
-  userTargetLang: Language;
-  userName: string;
-  userAvatar: string;
+  currentUser: UserProfile;
   onEndChat: () => void;
   onNextMatch: () => void;
 }
 
 export const ChatRoom: React.FC<ChatRoomProps> = ({
-  partner,
-  userNativeLang,
-  userTargetLang,
-  userName,
-  userAvatar,
+  partner: rawPartner,
+  currentUser: rawUser,
   onEndChat,
   onNextMatch,
 }) => {
+  const partner: UserProfile = {
+    ...rawPartner,
+    nativeLanguage: safeLanguage(rawPartner.nativeLanguage),
+    targetLanguage: safeLanguage(rawPartner.targetLanguage),
+  };
+
+  const currentUser: UserProfile = {
+    ...rawUser,
+    nativeLanguage: safeLanguage(rawUser.nativeLanguage),
+    targetLanguage: safeLanguage(rawUser.targetLanguage),
+  };
+
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [correctingMessage, setCorrectingMessage] = useState<ChatMessage | null>(null);
   const [showTopics, setShowTopics] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
-  const [exchangePhase, setExchangePhase] = useState<'native' | 'target'>('target');
-  const [timerSeconds, setTimerSeconds] = useState(300); // 5 minutes timer for equal exchange
+  const [timerSeconds, setTimerSeconds] = useState(300); // 5 minutes timer
+  const [exchangePhase, setExchangePhase] = useState<'target' | 'native'>('target');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Initialize introductory greeting messages
+  // Initialize intro messages
   useEffect(() => {
     const initialMsgs: ChatMessage[] = [
       {
@@ -58,7 +61,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
         senderId: partner.id,
         senderName: partner.name,
         senderAvatar: partner.avatar,
-        text: `Hello! 👋 Great to match with you. I'm a native ${partner.nativeLanguage.name} speaker and eager to practice ${partner.targetLanguage.name} with you!`,
+        text: `Hello! 👋 Great to match with you. I'm a native ${partner.nativeLanguage.name} speaker and excited to practice ${partner.targetLanguage.name} with you!`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         isNative: true,
       },
@@ -67,7 +70,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
         senderId: partner.id,
         senderName: partner.name,
         senderAvatar: partner.avatar,
-        text: `Feel free to correct any of my mistakes in ${partner.targetLanguage.name}, and I will help correct yours in ${partner.nativeLanguage.name}! Where are you joining from today?`,
+        text: `Feel free to correct any of my mistakes in ${partner.targetLanguage.name}, and I will help correct yours in ${partner.nativeLanguage.name}!`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         isNative: true,
       },
@@ -75,23 +78,22 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
     setMessages(initialMsgs);
   }, [partner]);
 
-  // Scroll to bottom on new message
+  // Scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  // Exchange Timer countdown
+  // Timer countdown
   useEffect(() => {
     const timer = setInterval(() => {
       setTimerSeconds((prev) => {
         if (prev <= 1) {
           setExchangePhase((curr) => (curr === 'target' ? 'native' : 'target'));
-          return 300; // Reset to 5 mins
+          return 300;
         }
         return prev - 1;
       });
     }, 1000);
-
     return () => clearInterval(timer);
   }, []);
 
@@ -101,16 +103,15 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
     return `${mins}:${s < 10 ? '0' : ''}${s}`;
   };
 
-  // Send message
   const handleSendMessage = async (textToSend?: string) => {
     const text = textToSend || inputText;
     if (!text.trim()) return;
 
     const userMsg: ChatMessage = {
       id: `user_msg_${Date.now()}`,
-      senderId: 'current_user',
-      senderName: userName || 'You',
-      senderAvatar: userAvatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+      senderId: currentUser.id,
+      senderName: currentUser.name,
+      senderAvatar: currentUser.avatar,
       text: text.trim(),
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       isNative: false,
@@ -120,7 +121,6 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
     setInputText('');
     setIsTyping(true);
 
-    // Get partner reply from backend API
     try {
       const response = await fetch('/api/bot-reply', {
         method: 'POST',
@@ -144,7 +144,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
           senderId: partner.id,
           senderName: partner.name,
           senderAvatar: partner.avatar,
-          text: data.replyText || 'That sounds wonderful! Tell me more about your experience.',
+          text: data.replyText || 'That is fascinating! Tell me more about your thoughts on this.',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           isNative: true,
         };
@@ -156,7 +156,6 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
     }
   };
 
-  // Inline Translate message
   const handleTranslateMessage = async (msgId: string, text: string) => {
     try {
       const res = await fetch('/api/translate', {
@@ -164,7 +163,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text,
-          targetLanguage: userNativeLang.name,
+          targetLanguage: currentUser.nativeLanguage.name,
         }),
       });
       const data = await res.json();
@@ -176,7 +175,6 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
     }
   };
 
-  // Text-To-Speech Speech Synthesis
   const handleSpeakText = (text: string, langCode: string) => {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
@@ -186,7 +184,6 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
     }
   };
 
-  // Apply Correction to Message
   const handleSendCorrection = (originalText: string, correctedText: string, explanation: string) => {
     if (!correctingMessage) return;
 
@@ -196,7 +193,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
       originalText,
       correctedText,
       explanation,
-      correctedBy: userName || 'Exchange Partner',
+      correctedBy: currentUser.name,
       createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
@@ -204,14 +201,13 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
       prev.map((m) => (m.id === correctingMessage.id ? { ...m, correction: correctionData } : m))
     );
 
-    // Send thank-you note from partner automatically
     setTimeout(() => {
       const thankMsg: ChatMessage = {
         id: `thank_${Date.now()}`,
         senderId: partner.id,
         senderName: partner.name,
         senderAvatar: partner.avatar,
-        text: `Thank you for the correction! 🙏 That makes complete sense. I will remember that.`,
+        text: `Thank you for the correction! 🙏 That is extremely helpful.`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         isNative: true,
       };
@@ -220,52 +216,52 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto h-[calc(100vh-80px)] flex flex-col bg-slate-50 border-x border-slate-200 shadow-sm">
-      {/* Top Partner Header */}
-      <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between shrink-0 shadow-xs z-10">
-        <div className="flex items-center gap-3">
+    <div className="w-full max-w-5xl mx-auto h-[calc(100vh-80px)] flex flex-col bg-slate-50 border-x border-slate-200 shadow-xl rounded-t-3xl overflow-hidden my-auto">
+      {/* Top Navbar Header */}
+      <div className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shrink-0 z-10 shadow-xs">
+        <div className="flex items-center gap-4">
           <button
             onClick={onEndChat}
-            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
-            title="Leave Room"
+            className="p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
+            title="Back to Dashboard"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
 
           <div className="relative">
             <img
-              src={partner.avatar}
+              src={partner.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
               alt={partner.name}
-              className="w-10 h-10 rounded-full object-cover border border-slate-200"
+              className="w-12 h-12 rounded-2xl object-cover border-2 border-white shadow-md"
             />
-            <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></span>
+            <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full"></span>
           </div>
 
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-sm font-bold text-slate-900">{partner.name}</h2>
-              <span className="text-sm">{partner.flag}</span>
+              <h2 className="text-base font-extrabold text-slate-900">{partner.name}</h2>
+              <span className="text-base">{partner.flag || '🌍'}</span>
             </div>
-            <p className="text-xs text-slate-500 flex items-center gap-2">
+            <p className="text-xs text-slate-500 flex items-center gap-2 font-medium">
               <span>Native: {partner.nativeLanguage.flag} {partner.nativeLanguage.name}</span>
               <span>•</span>
-              <span className="text-indigo-600 font-medium">Practicing: {partner.targetLanguage.flag} {partner.targetLanguage.name}</span>
+              <span className="text-indigo-600 font-bold">Practicing: {partner.targetLanguage.flag} {partner.targetLanguage.name}</span>
             </p>
           </div>
         </div>
 
-        {/* Action CTAs */}
-        <div className="flex items-center gap-2">
+        {/* Action Buttons */}
+        <div className="flex items-center gap-3">
           <button
             onClick={onNextMatch}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-xs cursor-pointer transition-colors"
+            className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-sm cursor-pointer transition-all"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span>Next Match</span>
+            <span>Next Partner</span>
           </button>
           <button
             onClick={onEndChat}
-            className="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold cursor-pointer transition-colors"
+            className="px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold cursor-pointer transition-all"
           >
             End Chat
           </button>
@@ -273,107 +269,107 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
       </div>
 
       {/* Reciprocal Time Balance Bar */}
-      <div className="bg-slate-900 text-slate-200 px-4 py-2 flex items-center justify-between text-xs shrink-0">
-        <div className="flex items-center gap-2">
-          <Clock className="w-3.5 h-3.5 text-amber-400" />
+      <div className="bg-slate-900 text-slate-200 px-6 py-2.5 flex items-center justify-between text-xs shrink-0 shadow-inner">
+        <div className="flex items-center gap-2.5">
+          <Clock className="w-4 h-4 text-amber-400" />
           <span>
-            Current Focus:{' '}
+            Exchange Focus:{' '}
             <strong className="text-white">
               {exchangePhase === 'target'
-                ? `Practicing ${userTargetLang.name} (${partner.nativeLanguage.name})`
-                : `Helping Partner with ${userNativeLang.name}`}
+                ? `Practicing ${currentUser.targetLanguage.name} (${partner.nativeLanguage.name})`
+                : `Helping Partner with ${currentUser.nativeLanguage.name}`}
             </strong>
           </span>
         </div>
-        <div className="flex items-center gap-2 bg-slate-800 px-2.5 py-0.5 rounded-md text-amber-300 font-mono font-bold">
+        <div className="flex items-center gap-2 bg-slate-800 px-3 py-1 rounded-lg text-amber-300 font-mono font-black text-sm shadow-2xs">
           <span>{formatTime(timerSeconds)}</span>
         </div>
       </div>
 
-      {/* Chat Messages Timeline */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+      {/* Messages Timeline */}
+      <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gradient-to-b from-slate-50/50 to-slate-100/50">
         {messages.map((msg) => {
-          const isMe = msg.senderId === 'current_user';
+          const isMe = msg.senderId === currentUser.id;
 
           return (
-            <div key={msg.id} className={`flex gap-3 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
+            <div key={msg.id} className={`flex gap-3.5 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
               <img
-                src={msg.senderAvatar}
+                src={msg.senderAvatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80'}
                 alt={msg.senderName}
-                className="w-8 h-8 rounded-full object-cover border border-slate-200 shrink-0 mt-1"
+                className="w-10 h-10 rounded-2xl object-cover border border-slate-200 shadow-sm shrink-0 mt-1"
               />
 
-              <div className={`max-w-[82%] sm:max-w-[70%] space-y-1 ${isMe ? 'items-end' : 'items-start'}`}>
-                <div className={`flex items-center gap-2 text-[11px] text-slate-500 ${isMe ? 'justify-end' : ''}`}>
-                  <span className="font-semibold text-slate-700">{msg.senderName}</span>
+              <div className={`max-w-[80%] sm:max-w-[68%] space-y-1.5 ${isMe ? 'items-end' : 'items-start'}`}>
+                <div className={`flex items-center gap-2 text-xs text-slate-500 font-medium ${isMe ? 'justify-end' : ''}`}>
+                  <span>{msg.senderName}</span>
+                  <span className="text-slate-300">•</span>
                   <span>{msg.timestamp}</span>
                 </div>
 
-                {/* Message Bubble */}
                 <div
-                  className={`p-3.5 rounded-2xl text-sm leading-relaxed shadow-xs relative group ${
+                  className={`p-4 rounded-2xl text-sm leading-relaxed shadow-sm relative group ${
                     isMe
-                      ? 'bg-slate-900 text-white rounded-tr-xs'
-                      : 'bg-white border border-slate-200 text-slate-900 rounded-tl-xs'
+                      ? 'bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-tr-xs'
+                      : 'bg-white border border-slate-200/80 text-slate-900 rounded-tl-xs'
                   }`}
                 >
-                  <p>{msg.text}</p>
+                  <p className="whitespace-pre-wrap">{msg.text}</p>
 
-                  {/* Correction Badge Overlay if corrected */}
+                  {/* Correction Badge */}
                   {msg.correction && (
-                    <div className="mt-2.5 pt-2 border-t border-emerald-500/20 bg-emerald-50/90 text-emerald-950 p-2.5 rounded-xl space-y-1 text-xs">
+                    <div className="mt-3 pt-3 border-t border-emerald-500/20 bg-emerald-50/90 text-emerald-950 p-3 rounded-xl space-y-1.5 text-xs">
                       <div className="flex items-center gap-1.5 font-bold text-emerald-800">
-                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                        <ShieldCheck className="w-4 h-4 text-emerald-600" />
                         <span>Language Correction</span>
                       </div>
                       <p className="line-through text-slate-500">{msg.correction.originalText}</p>
-                      <p className="font-bold text-emerald-900">👉 {msg.correction.correctedText}</p>
+                      <p className="font-extrabold text-emerald-900 text-sm">👉 {msg.correction.correctedText}</p>
                       {msg.correction.explanation && (
-                        <p className="text-[11px] text-emerald-700 italic">"{msg.correction.explanation}"</p>
+                        <p className="text-xs text-emerald-700 italic">"{msg.correction.explanation}"</p>
                       )}
                     </div>
                   )}
 
-                  {/* Inline Translation if requested */}
+                  {/* Inline Translation */}
                   {msg.translatedText && (
-                    <div className="mt-2 pt-2 border-t border-indigo-200/40 text-xs text-indigo-900 bg-indigo-50/80 p-2 rounded-lg">
-                      <span className="font-bold text-indigo-700 block">Translation:</span>
-                      <span>{msg.translatedText}</span>
+                    <div className="mt-3 pt-3 border-t border-indigo-200/55 text-xs text-indigo-950 bg-indigo-50/80 p-3 rounded-xl space-y-0.5">
+                      <span className="font-bold text-indigo-700 block uppercase text-[10px]">Translation</span>
+                      <p className="font-medium">{msg.translatedText}</p>
                     </div>
                   )}
 
-                  {/* Message Action Toolbar */}
+                  {/* Toolbar */}
                   <div
-                    className={`mt-2 flex items-center gap-3 text-xs pt-1 border-t ${
-                      isMe ? 'border-slate-800 text-slate-400' : 'border-slate-100 text-slate-500'
+                    className={`mt-3 flex items-center gap-4 text-xs pt-2 border-t ${
+                      isMe ? 'border-slate-800 text-slate-300' : 'border-slate-100 text-slate-500'
                     }`}
                   >
                     <button
-                      onClick={() => handleSpeakText(msg.text, isMe ? userTargetLang.code : partner.nativeLanguage.code)}
-                      className="hover:text-indigo-400 flex items-center gap-1 cursor-pointer"
-                      title="Listen to native pronunciation"
+                      onClick={() => handleSpeakText(msg.text, isMe ? currentUser.targetLanguage.code : partner.nativeLanguage.code)}
+                      className="hover:text-indigo-400 flex items-center gap-1.5 cursor-pointer font-medium"
+                      title="Listen"
                     >
                       <Volume2 className="w-3.5 h-3.5" />
-                      <span className="text-[11px]">Listen</span>
+                      <span>Listen</span>
                     </button>
 
                     <button
                       onClick={() => handleTranslateMessage(msg.id, msg.text)}
-                      className="hover:text-indigo-400 flex items-center gap-1 cursor-pointer"
-                      title="Translate to native language"
+                      className="hover:text-indigo-400 flex items-center gap-1.5 cursor-pointer font-medium"
+                      title="Translate"
                     >
                       <Globe className="w-3.5 h-3.5" />
-                      <span className="text-[11px]">Translate</span>
+                      <span>Translate</span>
                     </button>
 
                     {!isMe && (
                       <button
                         onClick={() => setCorrectingMessage(msg)}
-                        className="hover:text-emerald-500 flex items-center gap-1 font-semibold text-emerald-600 cursor-pointer"
-                        title="Suggest language correction"
+                        className="hover:text-emerald-500 flex items-center gap-1.5 font-bold text-emerald-600 cursor-pointer"
+                        title="Correct"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
-                        <span className="text-[11px]">Correct</span>
+                        <span>Correct</span>
                       </button>
                     )}
                   </div>
@@ -384,17 +380,17 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
         })}
 
         {isTyping && (
-          <div className="flex gap-3">
+          <div className="flex gap-3.5">
             <img
-              src={partner.avatar}
+              src={partner.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
               alt={partner.name}
-              className="w-8 h-8 rounded-full object-cover border border-slate-200 shrink-0"
+              className="w-10 h-10 rounded-2xl object-cover border border-slate-200 shadow-sm shrink-0"
             />
-            <div className="bg-white border border-slate-200 px-4 py-2.5 rounded-2xl rounded-tl-xs text-xs text-slate-500 flex items-center gap-1.5 shadow-xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce"></span>
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '0.2s' }}></span>
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '0.4s' }}></span>
-              <span className="ml-1 italic font-medium">{partner.name} is typing...</span>
+            <div className="bg-white border border-slate-200 px-4 py-3 rounded-2xl rounded-tl-xs text-xs text-slate-500 flex items-center gap-2 shadow-xs">
+              <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce"></span>
+              <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '0.2s' }}></span>
+              <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '0.4s' }}></span>
+              <span className="ml-1 font-semibold text-slate-700">{partner.name} is typing...</span>
             </div>
           </div>
         )}
@@ -402,22 +398,22 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Topics Drawer / Icebreakers Overlay */}
+      {/* Cultural Conversation Topics Drawer */}
       {showTopics && (
-        <div className="bg-indigo-50 border-t border-indigo-200 p-4 space-y-3 animate-in slide-in-from-bottom duration-200">
+        <div className="bg-indigo-50 border-t border-indigo-200/80 p-5 space-y-3 animate-in slide-in-from-bottom duration-200 shadow-md">
           <div className="flex items-center justify-between">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-900 flex items-center gap-1.5">
+            <h4 className="text-xs font-black uppercase tracking-wider text-indigo-950 flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-indigo-600" />
-              <span>Culture & Conversation Starters</span>
+              <span>Culture & Conversation Starters (مواضيع المحادثة)</span>
             </h4>
             <button
               onClick={() => setShowTopics(false)}
-              className="text-xs text-indigo-600 font-semibold cursor-pointer hover:underline"
+              className="text-xs font-bold text-indigo-600 hover:underline cursor-pointer"
             >
               Close
             </button>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {CULTURAL_TOPICS.map((topic, i) => (
               <button
                 key={i}
@@ -425,35 +421,30 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
                   handleSendMessage(topic.prompt);
                   setShowTopics(false);
                 }}
-                className="text-left p-2.5 rounded-xl bg-white border border-indigo-100 hover:border-indigo-300 text-xs text-slate-800 shadow-2xs hover:shadow-xs transition-all cursor-pointer"
+                className="text-left p-3 rounded-2xl bg-white border border-indigo-100 hover:border-indigo-300 text-xs text-slate-900 shadow-2xs hover:shadow-md transition-all cursor-pointer space-y-1"
               >
-                <span className="font-bold text-indigo-700 block mb-0.5">{topic.category}</span>
-                <span>{topic.prompt}</span>
+                <span className="font-extrabold text-indigo-700 block">{topic.category}</span>
+                <span className="text-slate-600 leading-relaxed block">{topic.prompt}</span>
               </button>
             ))}
           </div>
         </div>
       )}
 
-      {/* Input Bar */}
-      <div className="bg-white border-t border-slate-200 p-3 sm:p-4 shrink-0 space-y-2">
+      {/* Input Footer */}
+      <div className="bg-white border-t border-slate-200 p-4 shrink-0 space-y-3 shadow-lg">
         <div className="flex items-center justify-between text-xs text-slate-500">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowTopics(!showTopics)}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-semibold cursor-pointer transition-colors"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Topic Prompts</span>
-            </button>
-            <span className="hidden sm:inline text-slate-400">|</span>
-            <span className="hidden sm:inline text-slate-500">
-              Type in <strong>{userTargetLang.name}</strong> or <strong>{userNativeLang.name}</strong>
-            </span>
-          </div>
+          <button
+            onClick={() => setShowTopics(!showTopics)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold cursor-pointer transition-all shadow-2xs"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+            <span>Culture Topics & Icebreakers</span>
+          </button>
 
-          <span className="text-[11px] text-emerald-600 font-medium">
-            🟢 {partner.name} is listening
+          <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>{partner.name} is online</span>
           </span>
         </div>
 
@@ -462,27 +453,28 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
             e.preventDefault();
             handleSendMessage();
           }}
-          className="flex items-center gap-2"
+          className="flex items-center gap-3"
         >
           <input
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            placeholder={`Message ${partner.name} in ${userTargetLang.name}...`}
-            className="flex-1 bg-slate-100 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900 text-slate-900 rounded-xl px-4 py-2.5 text-sm"
+            placeholder={`Message ${partner.name} in ${currentUser.targetLanguage.name}...`}
+            className="flex-1 bg-slate-100/80 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600 text-slate-900 rounded-2xl px-5 py-3 text-sm shadow-inner font-medium transition-all"
           />
 
           <button
             type="submit"
             disabled={!inputText.trim()}
-            className="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer shrink-0 shadow-xs"
+            className="px-6 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer shrink-0 shadow-md flex items-center gap-2 text-xs"
           >
+            <span>Send</span>
             <Send className="w-4 h-4" />
           </button>
         </form>
       </div>
 
-      {/* Modal Overlay for Correction */}
+      {/* Correction Modal */}
       {correctingMessage && (
         <CorrectionModal
           message={correctingMessage}

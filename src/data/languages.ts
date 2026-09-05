@@ -18,3 +18,18 @@ export const LANGUAGES: Language[] = [
 export function getLanguageByCode(code: string): Language {
   return LANGUAGES.find((l) => l.code === code) || LANGUAGES[0];
 }
+
+export function safeLanguage(lang: any): Language {
+  if (!lang) return LANGUAGES[0];
+  if (typeof lang === 'string') {
+    return getLanguageByCode(lang);
+  }
+  return {
+    code: lang.code || 'en',
+    name: lang.name || 'English',
+    nativeName: lang.nativeName || 'English',
+    flag: lang.flag || '🌐',
+    popularIn: lang.popularIn || [],
+  };
+}
+
